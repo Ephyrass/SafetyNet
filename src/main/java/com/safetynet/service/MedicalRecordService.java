@@ -29,7 +29,7 @@ public class MedicalRecordService {
     public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
         log.info("Adding new medical record for: {} {}",
                 medicalRecord.getFirstName(), medicalRecord.getLastName());
-        dataLoaderService.getDataStore().getMedicalrecords().add(medicalRecord);
+        dataLoaderService.getDataStore().getMedicalRecords().add(medicalRecord);
         return medicalRecord;
     }
 

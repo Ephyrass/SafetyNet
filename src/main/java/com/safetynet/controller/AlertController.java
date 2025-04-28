@@ -1,0 +1,179 @@
+package com.safetynet.controller;
+
+import com.safetynet.dto.ChildAlertDTO;
+import com.safetynet.dto.FireStationCoverageDTO;
+import com.safetynet.dto.PersonInfoDTO;
+import com.safetynet.dto.FireDTO;
+import com.safetynet.dto.PhoneAlertDTO;
+import com.safetynet.dto.PersonMedicalInfoDTO;
+import com.safetynet.model.MedicalRecord;
+import com.safetynet.model.Person;
+import com.safetynet.service.FireStationService;
+import com.safetynet.service.MedicalRecordService;
+import com.safetynet.service.PersonService;
+import com.safetynet.utils.AgeCalculator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+public class AlertController {
+
+    private final PersonService personService;
+    private final FireStationService fireStationService;
+    private final MedicalRecordService medicalRecordService;
+
+    /**
+     * Endpoint to get the coverage of a fire station.
+     *
+     * @param stationNumber The number of the fire station.
+     * @return A response entity containing the coverage information.
+     */
+
+    @GetMapping("/firestation")
+    public ResponseEntity<FireStationCoverageDTO> getFireStationCoverage(@RequestParam String stationNumber) {
+        try {
+            log.debug("Coverage request for station: {}", stationNumber);
+
+            List<String> addresses = fireStationService.getAddressesByStation(stationNumber);
+            List<Person> coveredPersons = new ArrayList<>();
+
+            for (String address : addresses) {
+                coveredPersons.addAll(personService.getPersonsByAddress(address));
+            }
+
+            List<PersonInfoDTO> personInfos = new ArrayList<>();
+            int adultCount = 0;
+            int childCount = 0;
+
+            for (Person person : coveredPersons) {
+                PersonInfoDTO personInfo = new PersonInfoDTO(
+                        person.getFirstName(),
+                        person.getLastName(),
+                        person.getAddress(),
+                        person.getPhone()
+                );
+                personInfos.add(personInfo);
+
+                MedicalRecord medicalRecord = medicalRecordService.getMedicalRecord(
+                        person.getFirstName(), person.getLastName());
+
+                if (medicalRecord != null) {
+                    if (AgeCalculator.isChild(medicalRecord.getBirthdate())) {
+                        childCount++;
+                    } else {
+                        adultCount++;
+                    }
+                }
+            }
+
+            FireStationCoverageDTO response = new FireStationCoverageDTO(personInfos, adultCount, childCount);
+            log.info("Station {} coverage: {} adults, {} children",
+                    stationNumber, adultCount, childCount);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error retrieving station coverage: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    /**
+     * Endpoint to get the child alert for a specific address.
+     *
+     * @param address The address to check for child alerts.
+     * @return A response entity containing the list of children and their household members.
+     */
+
+    @GetMapping("/childAlert")
+    public ResponseEntity<List<ChildAlertDTO>> getChildAlert(@RequestParam String address) {
+        try {
+            log.debug("Child alert request for address: {}", address);
+
+            List<Person> residents = personService.getPersonsByAddress(address);
+            List<ChildAlertDTO> children = new ArrayList<>();
+            List<PersonInfoDTO> adults = new ArrayList<>();
+
+            for (Person person : residents) {
+                MedicalRecord medicalRecord = medicalRecordService.getMedicalRecord(
+                        person.getFirstName(), person.getLastName());
+
+                PersonInfoDTO personInfo = new PersonInfoDTO(
+                        person.getFirstName(),
+                        person.getLastName(),
+                        person.getAddress(),
+                        person.getPhone()
+                );
+
+                if (medicalRecord != null) {
+                    if (AgeCalculator.isChild(medicalRecord.getBirthdate())) {
+                        ChildAlertDTO child = new ChildAlertDTO();
+                        child.setFirstName(person.getFirstName());
+                        child.setLastName(person.getLastName());
+                        child.setAge(AgeCalculator.calculateAge(medicalRecord.getBirthdate()));
+                        children.add(child);
+                    } else {
+                        adults.add(personInfo);
+                    }
+                }
+            }
+            /*
+             * Set the adult list in each child alert object
+             * This is done to avoid sending the same list multiple times
+             */
+            for (ChildAlertDTO child : children) {
+                child.setHouseholdMembers(adults);
+            }
+
+            log.info("Child alert for address {}: {} children found", address, children.size());
+
+            return ResponseEntity.ok(children);
+        } catch (Exception e) {
+            log.error("Error retrieving child alert: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Endpoint to get the phone alert for a specific fire station.
+     *
+     * @param firestation The fire station number to check for phone alerts.
+     * @return A response entity containing the phone alert data with station number and phone numbers.
+     */
+    @GetMapping("/phoneAlert")
+    public ResponseEntity<PhoneAlertDTO> getPhoneAlert(@RequestParam String firestation) {
+        try {
+            log.debug("Phone alert request for station: {}", firestation);
+
+            List<String> addresses = fireStationService.getAddressesByStation(firestation);
+            List<String> phoneNumbers = new ArrayList<>();
+
+            for (String address : addresses) {
+                List<Person> residents = personService.getPersonsByAddress(address);
+                for (Person resident : residents) {
+                    phoneNumbers.add(resident.getPhone());
+                }
+            }
+
+            List<String> uniquePhoneNumbers = phoneNumbers.stream().distinct().collect(Collectors.toList());
+            
+            PhoneAlertDTO response = new PhoneAlertDTO(firestation, uniquePhoneNumbers);
+
+            log.info("Phone alert for station {}: {} unique numbers",
+                    firestation, uniquePhoneNumbers.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error retrieving phone alert: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+}

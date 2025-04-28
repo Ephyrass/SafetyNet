@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.security.PublicKey;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class PersonService {
                 .filter(p -> p.getLastName().equalsIgnoreCase(lastName))
                 .collect(Collectors.toList());
     }
+
 
     public List<Person> getPersonsByCity(String city) {
         log.debug("Get person by city: {}", city);
@@ -68,4 +70,10 @@ public class PersonService {
         List<Person> persons = getAllPersons();
         return persons.removeIf(p -> p.getFirstName().equals(firstName) && p.getLastName().equals(lastName));
     }
+
+
+
+
+
+
 }

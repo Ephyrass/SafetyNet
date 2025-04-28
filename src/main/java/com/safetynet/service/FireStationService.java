@@ -15,8 +15,10 @@ public class FireStationService {
 
     private final DataLoaderService dataLoaderService;
 
+
+
     public List<FireStation> getAllFireStations() {
-        return dataLoaderService.getDataStore().getFirestations();
+        return dataLoaderService.getDataStore().getFireStations();
     }
 
     public List<FireStation> getFireStationsByStation(String station) {
@@ -27,7 +29,7 @@ public class FireStationService {
     }
 
     public List<String> getAddressesByStation(String station) {
-        log.debug("Get Fire station by number: {}", station);
+        log.debug("Get address by station: {}", station);
         return getFireStationsByStation(station).stream()
                 .map(FireStation::getAddress)
                 .collect(Collectors.toList());
@@ -44,7 +46,7 @@ public class FireStationService {
     public FireStation addFireStation(FireStation fireStation) {
         log.info("add new fire station: {} - Station {}",
                 fireStation.getAddress(), fireStation.getStation());
-        dataLoaderService.getDataStore().getFirestations().add(fireStation);
+        dataLoaderService.getDataStore().getFireStations().add(fireStation);
         return fireStation;
     }
 
