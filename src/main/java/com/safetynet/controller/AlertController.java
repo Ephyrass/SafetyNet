@@ -2,8 +2,9 @@ package com.safetynet.controller;
 
 import com.safetynet.dto.ChildAlertDTO;
 import com.safetynet.dto.FireStationCoverageDTO;
-import com.safetynet.dto.PersonInfoDTO;
 import com.safetynet.dto.FireDTO;
+import com.safetynet.dto.FloodAlertDTO;
+import com.safetynet.dto.PersonInfoDTO;
 import com.safetynet.dto.PhoneAlertDTO;
 import com.safetynet.dto.PersonMedicalInfoDTO;
 import com.safetynet.model.MedicalRecord;
@@ -42,12 +43,7 @@ public class AlertController {
         try {
             log.debug("Coverage request for station: {}", stationNumber);
 
-            List<String> addresses = fireStationService.getAddressesByStation(stationNumber);
-            List<Person> coveredPersons = new ArrayList<>();
-
-            for (String address : addresses) {
-                coveredPersons.addAll(personService.getPersonsByAddress(address));
-            }
+            List<Person> coveredPersons = fireStationService.getPersonsCoveredByStation(stationNumber, personService);
 
             List<PersonInfoDTO> personInfos = new ArrayList<>();
             int adultCount = 0;
@@ -151,18 +147,13 @@ public class AlertController {
         try {
             log.debug("Phone alert request for station: {}", firestation);
 
-            List<String> addresses = fireStationService.getAddressesByStation(firestation);
-            List<String> phoneNumbers = new ArrayList<>();
+            List<Person> coveredPersons = fireStationService.getPersonsCoveredByStation(firestation, personService);
 
-            for (String address : addresses) {
-                List<Person> residents = personService.getPersonsByAddress(address);
-                for (Person resident : residents) {
-                    phoneNumbers.add(resident.getPhone());
-                }
-            }
+            List<String> uniquePhoneNumbers = coveredPersons.stream()
+                    .map(Person::getPhone)
+                    .distinct()
+                    .collect(Collectors.toList());
 
-            List<String> uniquePhoneNumbers = phoneNumbers.stream().distinct().collect(Collectors.toList());
-            
             PhoneAlertDTO response = new PhoneAlertDTO(firestation, uniquePhoneNumbers);
 
             log.info("Phone alert for station {}: {} unique numbers",
@@ -174,6 +165,84 @@ public class AlertController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    /**
+     * Endpoint to get fire information for a specific address.
+     *
+     * @param address The address to check for fire information.
+     * @return A response entity containing the fire station number and residents' information.
+     */
+    @GetMapping("/fire")
+    public ResponseEntity<FireDTO> getFireInfo(@RequestParam String address) {
+        try {
+            log.debug("Fire info request for address: {}", address);
 
+            String stationNumber = fireStationService.getStationNumberByAddress(address);
+
+            List<Person> residents = personService.getPersonsByAddress(address);
+            List<PersonMedicalInfoDTO> residentInfos = new ArrayList<>();
+
+            for (Person person : residents) {
+                MedicalRecord medicalRecord = medicalRecordService.getMedicalRecord(
+                        person.getFirstName(), person.getLastName());
+
+                if (medicalRecord != null) {
+                    PersonMedicalInfoDTO residentInfo = new PersonMedicalInfoDTO(
+                            person.getFirstName(),
+                            person.getLastName(),
+                            person.getPhone(),
+                            AgeCalculator.calculateAge(medicalRecord.getBirthdate()),
+                            medicalRecord.getMedications(),
+                            medicalRecord.getAllergies()
+                    );
+                    residentInfos.add(residentInfo);
+                }
+            }
+
+            FireDTO response = new FireDTO(stationNumber, residentInfos);
+
+            log.info("Fire info for address {}: station {} with {} residents",
+                    address, stationNumber, residentInfos.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error retrieving fire info: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Endpoint to get household information for stations in case of flood.
+     *
+     * @param stations A list of fire station numbers.
+     * @return A response entity containing households grouped by address for the specified stations.
+     */
+    @GetMapping("/flood/stations")
+    public ResponseEntity<List<FloodAlertDTO>> getFloodStations(@RequestParam List<String> stations) {
+        try {
+            log.debug("Flood stations request for stations: {}", stations);
+
+            List<FloodAlertDTO> response = new ArrayList<>();
+
+            for (String station : stations) {
+                List<String> addresses = fireStationService.getAddressesByStation(station);
+
+                for (String address : addresses) {
+                    List<PersonMedicalInfoDTO> residentInfos =
+                            medicalRecordService.getMedicalInfoByAddress(address, personService);
+
+                    FloodAlertDTO householdInfo = new FloodAlertDTO(address, residentInfos);
+                    response.add(householdInfo);
+                }
+            }
+
+            log.info("Flood info for stations {}: {} households found",
+                    stations, response.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error retrieving flood stations info: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
 }

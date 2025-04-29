@@ -1,10 +1,12 @@
 package com.safetynet.service;
 
 import com.safetynet.model.FireStation;
+import com.safetynet.model.Person;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,7 @@ public class FireStationService {
                 .filter(fs -> fs.getStation().equals(station))
                 .collect(Collectors.toList());
     }
+    
 
     public List<String> getAddressesByStation(String station) {
         log.debug("Get address by station: {}", station);
@@ -41,6 +44,23 @@ public class FireStationService {
                 .filter(fs -> fs.getAddress().equals(address))
                 .findFirst()
                 .orElse(null);
+    }
+    public String getStationNumberByAddress(String address) {
+        log.debug("Get Fire station number by address: {}", address);
+        return getStationByAddress(address).getStation();
+    }
+
+
+    public List<Person> getPersonsCoveredByStation(String stationNumber, PersonService personService) {
+        log.debug("Get persons covered by station: {}", stationNumber);
+        List<String> addresses = getAddressesByStation(stationNumber);
+        List<Person> coveredPersons = new ArrayList<>();
+
+        for (String address : addresses) {
+            coveredPersons.addAll(personService.getPersonsByAddress(address));
+        }
+
+        return coveredPersons;
     }
 
     public FireStation addFireStation(FireStation fireStation) {

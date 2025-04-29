@@ -1,10 +1,14 @@
 package com.safetynet.service;
 
+import com.safetynet.dto.PersonMedicalInfoDTO;
 import com.safetynet.model.MedicalRecord;
+import com.safetynet.model.Person;
+import com.safetynet.utils.AgeCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,6 +30,42 @@ public class MedicalRecordService {
                 .orElse(null);
     }
 
+
+    public PersonMedicalInfoDTO buildMedicalInfoDTO(Person person) {
+        log.debug("Construction du DTO d'informations médicales pour: {} {}",
+                person.getFirstName(), person.getLastName());
+
+        MedicalRecord medicalRecord = getMedicalRecord(person.getFirstName(), person.getLastName());
+
+        if (medicalRecord != null) {
+            return new PersonMedicalInfoDTO(
+                    person.getFirstName(),
+                    person.getLastName(),
+                    person.getPhone(),
+                    AgeCalculator.calculateAge(medicalRecord.getBirthdate()),
+                    medicalRecord.getMedications(),
+                    medicalRecord.getAllergies()
+            );
+        }
+        return null;
+    }
+
+
+    public List<PersonMedicalInfoDTO> getMedicalInfoByAddress(String address, PersonService personService) {
+        log.debug("Récupération des informations médicales pour l'adresse: {}", address);
+
+        List<Person> residents = personService.getPersonsByAddress(address);
+        List<PersonMedicalInfoDTO> residentInfos = new ArrayList<>();
+
+        for (Person person : residents) {
+            PersonMedicalInfoDTO info = buildMedicalInfoDTO(person);
+            if (info != null) {
+                residentInfos.add(info);
+            }
+        }
+
+        return residentInfos;
+    }
     public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
         log.info("Adding new medical record for: {} {}",
                 medicalRecord.getFirstName(), medicalRecord.getLastName());
