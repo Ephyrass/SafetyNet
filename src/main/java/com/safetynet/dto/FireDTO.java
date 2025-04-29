@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class FireDTO {
     private String stationNumber;
-    private List<PersonMedicalInfoDTO> residents;
+    private List<PersonInfoDTO> residents;
 }

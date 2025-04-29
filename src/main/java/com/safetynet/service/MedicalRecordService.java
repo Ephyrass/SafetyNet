@@ -1,6 +1,6 @@
 package com.safetynet.service;
 
-import com.safetynet.dto.PersonMedicalInfoDTO;
+import com.safetynet.dto.PersonInfoDTO;
 import com.safetynet.model.MedicalRecord;
 import com.safetynet.model.Person;
 import com.safetynet.utils.AgeCalculator;
@@ -31,14 +31,14 @@ public class MedicalRecordService {
     }
 
 
-    public PersonMedicalInfoDTO buildMedicalInfoDTO(Person person) {
+    public PersonInfoDTO buildMedicalInfoDTO(Person person) {
         log.debug("Construction du DTO d'informations médicales pour: {} {}",
                 person.getFirstName(), person.getLastName());
 
         MedicalRecord medicalRecord = getMedicalRecord(person.getFirstName(), person.getLastName());
 
         if (medicalRecord != null) {
-            return new PersonMedicalInfoDTO(
+            return new PersonInfoDTO(
                     person.getFirstName(),
                     person.getLastName(),
                     person.getPhone(),
@@ -51,14 +51,14 @@ public class MedicalRecordService {
     }
 
 
-    public List<PersonMedicalInfoDTO> getMedicalInfoByAddress(String address, PersonService personService) {
+    public List<PersonInfoDTO> getMedicalInfoByAddress(String address, PersonService personService) {
         log.debug("Récupération des informations médicales pour l'adresse: {}", address);
 
         List<Person> residents = personService.getPersonsByAddress(address);
-        List<PersonMedicalInfoDTO> residentInfos = new ArrayList<>();
+        List<PersonInfoDTO> residentInfos = new ArrayList<>();
 
         for (Person person : residents) {
-            PersonMedicalInfoDTO info = buildMedicalInfoDTO(person);
+            PersonInfoDTO info = buildMedicalInfoDTO(person);
             if (info != null) {
                 residentInfos.add(info);
             }

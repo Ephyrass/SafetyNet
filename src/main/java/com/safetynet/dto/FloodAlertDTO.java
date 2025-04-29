@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class FloodAlertDTO {
     private String address;
-    private List<PersonMedicalInfoDTO> residents;
+    private List<PersonInfoDTO> residents;
 }

@@ -1,12 +1,6 @@
 package com.safetynet.controller;
 
-import com.safetynet.dto.ChildAlertDTO;
-import com.safetynet.dto.FireStationCoverageDTO;
-import com.safetynet.dto.FireDTO;
-import com.safetynet.dto.FloodAlertDTO;
-import com.safetynet.dto.PersonInfoDTO;
-import com.safetynet.dto.PhoneAlertDTO;
-import com.safetynet.dto.PersonMedicalInfoDTO;
+import com.safetynet.dto.*;
 import com.safetynet.model.MedicalRecord;
 import com.safetynet.model.Person;
 import com.safetynet.service.FireStationService;
@@ -179,14 +173,14 @@ public class AlertController {
             String stationNumber = fireStationService.getStationNumberByAddress(address);
 
             List<Person> residents = personService.getPersonsByAddress(address);
-            List<PersonMedicalInfoDTO> residentInfos = new ArrayList<>();
+            List<PersonInfoDTO> residentInfos = new ArrayList<>();
 
             for (Person person : residents) {
                 MedicalRecord medicalRecord = medicalRecordService.getMedicalRecord(
                         person.getFirstName(), person.getLastName());
 
                 if (medicalRecord != null) {
-                    PersonMedicalInfoDTO residentInfo = new PersonMedicalInfoDTO(
+                    PersonInfoDTO residentInfo = new PersonInfoDTO(
                             person.getFirstName(),
                             person.getLastName(),
                             person.getPhone(),
@@ -227,7 +221,7 @@ public class AlertController {
                 List<String> addresses = fireStationService.getAddressesByStation(station);
 
                 for (String address : addresses) {
-                    List<PersonMedicalInfoDTO> residentInfos =
+                    List<PersonInfoDTO> residentInfos =
                             medicalRecordService.getMedicalInfoByAddress(address, personService);
 
                     FloodAlertDTO householdInfo = new FloodAlertDTO(address, residentInfos);
@@ -244,5 +238,74 @@ public class AlertController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    /**
+        * Endpoint to get person information by last name.
+        *
+        * @param lastName The last name of the person to search for.
+        * @return A response entity containing the person's information.
+        */
+    @GetMapping("/personInfoLastName")
+    public ResponseEntity<List<PersonInfoDTO>> getPersonInfo(@RequestParam String lastName) {
+        try {
+            log.debug( "Person info request for last name: {}", lastName);
 
+            List<Person> persons = personService.getPersonsByLastName(lastName);
+            List<PersonInfoDTO> personInfoList = new ArrayList<>();
+
+            for (Person person : persons) {
+                MedicalRecord medicalRecord = medicalRecordService.getMedicalRecord(
+                        person.getFirstName(), person.getLastName());
+
+                if (medicalRecord != null) {
+                    PersonInfoDTO personInfo = new PersonInfoDTO(
+                            person.getFirstName(),
+                            person.getLastName(),
+                            person.getAddress(),
+                            person.getEmail(),
+                            person.getPhone(),
+                            AgeCalculator.calculateAge(medicalRecord.getBirthdate()),
+                            medicalRecord.getMedications(),
+                            medicalRecord.getAllergies()
+                    );
+                    personInfoList.add(personInfo);
+                }
+            }
+
+            log.info("Person info for last name {}: {} persons found",
+                    lastName, personInfoList.size());
+
+            return ResponseEntity.ok(personInfoList);
+        } catch (Exception e) {
+            log.error("Error retrieving person info: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    /**
+        * Endpoint to get community email addresses for a specific city.
+        *
+        * @param city The city to check for community email addresses.
+        * @return A response entity containing the community email addresses.
+        */
+    @GetMapping("/communityEmail")
+    public ResponseEntity<CommunityEmailDTO> getCommunityEmails(@RequestParam String city) {
+        try {
+            log.debug("Demande des emails pour la ville: {}", city);
+
+            List<String> emails = personService.getAllPersons().stream()
+                    .filter(person -> person.getCity().equalsIgnoreCase(city))
+                    .map(Person::getEmail)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            CommunityEmailDTO response = new CommunityEmailDTO(city, emails);
+
+            log.info("Emails pour la ville {}: {} adresses trouvées",
+                    city, emails.size());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des emails: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
