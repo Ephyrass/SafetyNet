@@ -35,11 +35,12 @@ public class PersonService {
     }
 
 
-    public List<Person> getPersonsByCity(String city) {
-        log.debug("Get person by city: {}", city);
+    public Person getPersonByFullName(String firstName, String lastName) {
+        log.debug("Get person by full name: {} {}", firstName, lastName);
         return getAllPersons().stream()
-                .filter(p -> p.getCity().equalsIgnoreCase(city))
-                .collect(Collectors.toList());
+                .filter(p -> p.getFirstName().equalsIgnoreCase(firstName) && p.getLastName().equalsIgnoreCase(lastName))
+                .findFirst()
+                .orElse(null);
     }
 
     public Person addPerson(Person person) {

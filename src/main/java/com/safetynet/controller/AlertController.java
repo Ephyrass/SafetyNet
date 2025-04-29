@@ -289,7 +289,7 @@ public class AlertController {
     @GetMapping("/communityEmail")
     public ResponseEntity<CommunityEmailDTO> getCommunityEmails(@RequestParam String city) {
         try {
-            log.debug("Demande des emails pour la ville: {}", city);
+            log.debug("Community email request for city: {}", city);
 
             List<String> emails = personService.getAllPersons().stream()
                     .filter(person -> person.getCity().equalsIgnoreCase(city))
@@ -299,12 +299,12 @@ public class AlertController {
 
             CommunityEmailDTO response = new CommunityEmailDTO(city, emails);
 
-            log.info("Emails pour la ville {}: {} adresses trouvées",
+            log.info("Community email for city {}: {} emails found",
                     city, emails.size());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Erreur lors de la récupération des emails: {}", e.getMessage(), e);
+            log.error("Error retrieving community emails: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
