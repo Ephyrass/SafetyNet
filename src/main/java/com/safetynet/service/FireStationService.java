@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FireStationService {
 
-    private final DataLoaderService dataLoaderService;
+    private final DataService dataService;
 
 
 
     public List<FireStation> getAllFireStations() {
-        return dataLoaderService.getDataStore().getFireStations();
+        return dataService.getDataStore().getFireStations();
     }
 
     public List<FireStation> getFireStationsByStation(String station) {
@@ -66,7 +66,7 @@ public class FireStationService {
     public FireStation addFireStation(FireStation fireStation) {
         log.info("add new fire station: {} - Station {}",
                 fireStation.getAddress(), fireStation.getStation());
-        dataLoaderService.getDataStore().getFireStations().add(fireStation);
+        dataService.getDataStore().getFireStations().add(fireStation);
         return fireStation;
     }
 

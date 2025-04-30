@@ -1,6 +1,6 @@
 package com.safetynet;
 
-import com.safetynet.service.DataLoaderService;
+import com.safetynet.service.DataService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -10,7 +10,7 @@ public class SafetyNetApplication {
 
     public static void main(String[] args) {
 
-        DataLoaderService dataLoader = new DataLoaderService();
+        DataService dataLoader = new DataService();
 
         SpringApplication.run(SafetyNetApplication.class, args);
     };

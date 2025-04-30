@@ -16,10 +16,10 @@ import java.util.List;
 @Slf4j
 public class MedicalRecordService {
 
-    private final DataLoaderService dataLoaderService;
+    private final DataService dataService;
 
     public List<MedicalRecord> getAllMedicalRecords() {
-        return dataLoaderService.getDataStore().getMedicalRecords();
+        return dataService.getDataStore().getMedicalRecords();
     }
 
     public MedicalRecord getMedicalRecord(String firstName, String lastName) {
@@ -69,7 +69,7 @@ public class MedicalRecordService {
     public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
         log.info("Adding new medical record for: {} {}",
                 medicalRecord.getFirstName(), medicalRecord.getLastName());
-        dataLoaderService.getDataStore().getMedicalRecords().add(medicalRecord);
+        dataService.getDataStore().getMedicalRecords().add(medicalRecord);
         return medicalRecord;
     }
 
