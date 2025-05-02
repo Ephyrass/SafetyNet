@@ -64,39 +64,60 @@ public class FireStationService {
     }
 
     public FireStation addFireStation(FireStation fireStation) {
-        log.info("add new fire station: {} - Station {}",
+        log.info("Adding new fire station mapping: {} - Station #{}",
                 fireStation.getAddress(), fireStation.getStation());
         dataService.getDataStore().getFireStations().add(fireStation);
+        dataService.saveDataToFile();
         return fireStation;
     }
 
     public FireStation updateFireStation(FireStation fireStation) {
-        log.info("update number of fire station: {}", fireStation.getAddress());
+        log.info("Updating fire station number for address: {}", fireStation.getAddress());
 
         List<FireStation> fireStations = getAllFireStations();
         for (int i = 0; i < fireStations.size(); i++) {
             FireStation fs = fireStations.get(i);
             if (fs.getAddress().equals(fireStation.getAddress())) {
                 fireStations.set(i, fireStation);
+                dataService.saveDataToFile();
                 return fireStation;
             }
         }
 
-        log.error("adress not found for this firestation: {}", fireStation.getAddress());
+        log.error("Mapping not found for address: {}", fireStation.getAddress());
         return null;
     }
 
-    public boolean deleteFireStation(String address) {
-        log.info("delete fire station adress : {}", address);
-
+    public boolean deleteFireStationByAddress(String address) {
+        log.info("Deleting mapping by address: {}", address);
         List<FireStation> fireStations = getAllFireStations();
-        return fireStations.removeIf(fs -> fs.getAddress().equals(address));
+        boolean removed = fireStations.removeIf(fs -> fs.getAddress().equals(address));
+        if (removed) {
+            dataService.saveDataToFile();
+        }
+        return removed;
     }
 
-    public boolean deleteFireStationByStation(String station) {
-        log.info("Delete fires station: {}", station);
-
+    public boolean deleteFireStationByStationNumber(String stationNumber) {
+        log.info("Deleting mappings by station number: {}", stationNumber);
         List<FireStation> fireStations = getAllFireStations();
-        return fireStations.removeIf(fs -> fs.getStation().equals(station));
+        boolean removed = fireStations.removeIf(fs -> fs.getStation().equals(stationNumber));
+        if (removed) {
+            dataService.saveDataToFile();
+        }
+        return removed;
+    }
+
+    public boolean deleteFireStation(String address, String stationNumber) {
+        log.info("Deleting mapping by address and station number: {} - Station #{}",
+                address, stationNumber);
+        List<FireStation> fireStations = getAllFireStations();
+        boolean removed = fireStations.removeIf(
+                fs -> fs.getAddress().equals(address) && fs.getStation().equals(stationNumber));
+        if (removed) {
+            dataService.saveDataToFile();
+        }
+        return removed;
     }
 }
+
