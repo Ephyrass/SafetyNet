@@ -32,7 +32,7 @@ public class MedicalRecordService {
 
 
     public PersonInfoDTO buildMedicalInfoDTO(Person person) {
-        log.debug("Construction du DTO d'informations médicales pour: {} {}",
+        log.debug("Building medical information DTO for: {} {}",
                 person.getFirstName(), person.getLastName());
 
         MedicalRecord medicalRecord = getMedicalRecord(person.getFirstName(), person.getLastName());
@@ -52,7 +52,7 @@ public class MedicalRecordService {
 
 
     public List<PersonInfoDTO> getMedicalInfoByAddress(String address, PersonService personService) {
-        log.debug("Récupération des informations médicales pour l'adresse: {}", address);
+        log.debug("Retrieving medical information for address: {}", address);
 
         List<Person> residents = personService.getPersonsByAddress(address);
         List<PersonInfoDTO> residentInfos = new ArrayList<>();
@@ -66,10 +66,12 @@ public class MedicalRecordService {
 
         return residentInfos;
     }
+    
     public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
         log.info("Adding new medical record for: {} {}",
                 medicalRecord.getFirstName(), medicalRecord.getLastName());
         dataService.getDataStore().getMedicalRecords().add(medicalRecord);
+        dataService.saveDataToFile();
         return medicalRecord;
     }
 
@@ -83,6 +85,7 @@ public class MedicalRecordService {
             if (mr.getFirstName().equals(medicalRecord.getFirstName()) &&
                     mr.getLastName().equals(medicalRecord.getLastName())) {
                 medicalRecords.set(i, medicalRecord);
+                dataService.saveDataToFile();
                 return medicalRecord;
             }
         }
@@ -96,7 +99,11 @@ public class MedicalRecordService {
         log.info("Deleting medical record for: {} {}", firstName, lastName);
 
         List<MedicalRecord> medicalRecords = getAllMedicalRecords();
-        return medicalRecords.removeIf(mr ->
+        boolean removed = medicalRecords.removeIf(mr ->
                 mr.getFirstName().equals(firstName) && mr.getLastName().equals(lastName));
+        if (removed) {
+            dataService.saveDataToFile();
+        }
+        return removed;
     }
 }
