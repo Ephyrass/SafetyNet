@@ -20,7 +20,7 @@ public class PersonService {
     }
 
     public List<Person> getPersonsByAddress(String address) {
-        log.debug("Get person by adresses: {}", address);
+        log.debug("Get person by addresses: {}", address);
         return getAllPersons().stream()
                 .filter(p -> p.getAddress().equals(address))
                 .collect(Collectors.toList());

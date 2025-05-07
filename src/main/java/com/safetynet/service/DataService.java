@@ -46,7 +46,7 @@ public class DataService {
                     dataStore.getMedicalRecords().size());
         } catch (Exception e) {
             log.error("Error loading data from JSON file: {}", e.getMessage(), e);
-            // Initialisation d'un DataStore vide en cas d'erreur pour éviter les NullPointerException
+            // Initialize an empty DataStore in case of error
             dataStore = new DataStore();
         }
     }
