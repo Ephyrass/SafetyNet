@@ -342,8 +342,8 @@
     "firstName" : "Update",
     "lastName" : "Test",
     "birthdate" : "01/01/1980",
-    "medications" : [ "med2:200mg" ],
-    "allergies" : [ "allergie2", "allergie3" ]
+    "medications" : [ "med1:100mg" ],
+    "allergies" : [ "allergie1" ]
   }, {
     "firstName" : "Test",
     "lastName" : "User",

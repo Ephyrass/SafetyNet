@@ -48,7 +48,9 @@ public class AlertController {
                         person.getFirstName(),
                         person.getLastName(),
                         person.getAddress(),
-                        person.getPhone()
+                        person.getPhone(),
+                        person.getEmail()
+
                 );
                 personInfos.add(personInfo);
 
@@ -98,7 +100,8 @@ public class AlertController {
                         person.getFirstName(),
                         person.getLastName(),
                         person.getAddress(),
-                        person.getPhone()
+                        person.getPhone(),
+                        person.getEmail()
                 );
 
                 if (medicalRecord != null) {

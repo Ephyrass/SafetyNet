@@ -22,11 +22,12 @@ public class PersonInfoDTO {
        depending on the information available. */
 
     // Constructor for basic information
-    public PersonInfoDTO(String firstName, String lastName, String address, String phone) {
+    public PersonInfoDTO(String firstName, String lastName, String address, String phone, String email) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.phone = phone;
+        this.email = email;
     }
 
     // Constructor for medical information
